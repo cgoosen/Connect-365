@@ -23,6 +23,7 @@ This script will work natively in PowerShell 4.0+
 There are no parameters or switches, simply execute the script: .\Connect-365.ps1
 
 **Screenshots:**
+
 ![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/a-768x564.png)
 
 ![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/b-768x564.png)
