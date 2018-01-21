@@ -3,7 +3,7 @@
 
 I’m excited to announce the release of Connect-365! Back 2012, I put together a basic script with a GUI to simplify connecting to Exchange Online via remote PowerShell. I had never intended to make the script publicly available and it was just something I used myself. After a couple years I realized that it had been shared with so many colleagues and clients that I decided to clean it up and publish it on the TechNet gallery. Connect-EXO was born! Here’s a screenshot of the original first version:
 
-.center![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/Capture1.png "")
+.center[![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/Capture1.png "")]
 
 Over time the script matured into what Connect-EXO is today. One of the challenges in the early version was that I used WPF for the GUI, this was problematic for older versions of PowerShell so I made the decision to port it to Windows Forms for backward compatibility. Forms is old and added a lot of bloat and since backwards compatibility is no longer a concern, I decided to move back to WPF. Connect-365 is essentially the next version of Connect-EXO, I renamed it so more accurately reflect it’s purpose and this will allow me to continue to maintain Connect-EXO.
 
@@ -23,3 +23,8 @@ This script will work natively in PowerShell 4.0+
 There are no parameters or switches, simply execute the script: .\Connect-365.ps1
 
 **Screenshots:**
+.center[![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/a.png "")]
+
+.center[![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/b.png "")]
+
+.center[![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/c.png "")]
