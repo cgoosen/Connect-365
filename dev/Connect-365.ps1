@@ -73,8 +73,8 @@ $XAML = @"
                                     <CheckBox Name="Box_Com" TabIndex="5" HorizontalAlignment="Right" VerticalAlignment="Top">Compliance Center</CheckBox>
                                     <CheckBox Name="Box_SPO" TabIndex="6" HorizontalAlignment="Left" VerticalAlignment="Center">SharePoint Online</CheckBox>
                                     <CheckBox Name="Box_SfB" TabIndex="7" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="78,0,0,0">Skype for Business Online</CheckBox>
-                                    <CheckBox Name="Box_Team" TabIndex="8" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,62,0">Teams</CheckBox>
-                                    <CheckBox Name="Box_Graph" TabIndex="9" HorizontalAlignment="Left" VerticalAlignment="Bottom">Intune API</CheckBox>
+                                    <CheckBox Name="Box_Teams" TabIndex="8" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,62,0">Teams</CheckBox>
+                                    <CheckBox Name="Box_Intune" TabIndex="9" HorizontalAlignment="Left" VerticalAlignment="Bottom">Intune API</CheckBox>
                                 </Grid>
                             </GroupBox>
                             <GroupBox Header="Options:" Width="508" Margin="10,10,0,0" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -139,6 +139,13 @@ $XAML = @"
                           <Button Name="Btn_TeamMsg" Content="Download now.." Width="125" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
                     </Grid>
                         </StackPanel>
+                        <StackPanel>
+                          <Grid Margin="0,10,0,0">
+                              <Label Content="Intune API" HorizontalAlignment="Left" FontSize="11"/>
+                              <TextBlock Name="Txt_IntuneStatus" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+                          <Button Name="Btn_IntuneMsg" Content="Download now.." Width="125" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -178,6 +185,14 @@ Function Get-Options{
             $Script:ConnectSPO = $true
             $OptionsArray++
     }
+        If ($GUIBox_Teams.IsChecked -eq "True") {
+            $Script:ConnectTeams = $true
+            $OptionsArray++
+    }
+        If ($GUIBox_Intune.IsChecked -eq "True") {
+            $Script:ConnectIntune = $true
+            $OptionsArray++
+    }
 }
 
 Function Get-UserPwd{
@@ -214,6 +229,14 @@ Function Connect-SPO{
     Connect-SPOService -Url $GUIField_SPOUrl.text -Credential $Credential
 }
 
+Function Connect-Teams{
+
+}
+
+Function Connect-Intune{
+
+}
+
 Function Get-ModuleInfo-AAD{
     If( !(Get-Module -Name AzureAD)) {
         try {
@@ -247,6 +270,27 @@ Function Get-ModuleInfo-SPO{
         return $false
     }
 }
+
+Function Get-ModuleInfo-Teams{
+    try {
+        Import-Module -Name MicrosoftTeams
+        return $true
+    }
+    catch {
+        return $false
+    }
+}
+
+Function Get-ModuleInfo-Intune{
+    try {
+        Import-Module -Name Microsoft.Graph.Intune
+        return $true
+    }
+    catch {
+        return $false
+    }
+}
+
 
 function Close-Window ($CloseReason) {
     Write-Host "$CloseReason" -ForegroundColor Red
@@ -297,6 +341,34 @@ function Get-PreReq-SPO{
         $GUITxt_SPOStatus.Text = "Failed!"
         $GUITxt_SPOStatus.Foreground = "Red"
         $GUIBtn_SPOMsg.IsEnabled = $true
+    }
+}
+
+function Get-PreReq-Teams{
+    If (Get-ModuleInfo-Teams -eq "True") {
+        $GUITxt_TeamsStatus.Text = "OK!"
+        $GUITxt_TeamsStatus.Foreground = "Green"
+        $GUIBtn_TeamsMsg.IsEnabled = $false
+        $GUIBtn_TeamsMsg.Opacity = "0"
+    }
+    else {
+        $GUITxt_TeamsStatus.Text = "Failed!"
+        $GUITxt_TeamsStatus.Foreground = "Red"
+        $GUIBtn_TeamsMsg.IsEnabled = $true
+    }
+}
+
+function Get-PreReq-Intune{
+    If (Get-ModuleInfo-Intune -eq "True") {
+        $GUITxt_IntuneStatus.Text = "OK!"
+        $GUITxt_IntuneStatus.Foreground = "Green"
+        $GUIBtn_IntuneMsg.IsEnabled = $false
+        $GUIBtn_IntuneMsg.Opacity = "0"
+    }
+    else {
+        $GUITxt_IntuneStatus.Text = "Failed!"
+        $GUITxt_IntuneStatus.Foreground = "Red"
+        $GUIBtn_IntuneMsg.IsEnabled = $true
     }
 }
 
@@ -381,6 +453,25 @@ $GUIBtn_SPOMsg.add_Click({
     }
 })
 
+$GUIBtn_TeamsMsg.add_Click({
+    try {
+        Start-Process -FilePath https://www.powershellgallery.com/packages/MicrosoftTeams
+    }
+    catch {
+        $MainWindow.Close()
+        Close-Window "An error occurred..`nExiting script"
+    }
+})
+
+$GUIBtn_IntuneMsg.add_Click({
+    try {
+        Start-Process -FilePath https://github.com/Microsoft/Intune-PowerShell-SDK
+    }
+    catch {
+        $MainWindow.Close()
+        Close-Window "An error occurred..`nExiting script"
+    }
+})
 
 $GUIBox_EXO.add_Click({
     $GUIBox_EXO.IsChecked -eq "True"
@@ -472,6 +563,26 @@ If ($ConnectAAD -eq "True"){
     }
 }
 
+# Connect to Teams if required
+If ($ConnectTeams -eq "True"){
+    Try {
+        Connect-Teams
+    }
+    Catch 	{
+        Get-FailedMsg 'Teams error'
+    }
+}
+
+# Connect to Intune if required
+If ($ConnectIntune -eq "True"){
+    Try {
+        Connect-Intune
+    }
+    Catch 	{
+        Get-FailedMsg 'Intune error'
+    }
+}
+
 # Notifications/Information
 Clear-Host
 Write-Host "
@@ -491,4 +602,10 @@ If ($ConnectSfB -eq "True"){
 }
 If ($ConnectSPO -eq "True"){
     Write-Host "-SharePoint Online" -ForegroundColor Yellow -BackgroundColor Black
+}
+If ($ConnectTeams -eq "True"){
+    Write-Host "-Teams" -ForegroundColor Yellow -BackgroundColor Black
+}
+If ($ConnectIntune -eq "True"){
+    Write-Host "-Intune API" -ForegroundColor Yellow -BackgroundColor Black
 }
