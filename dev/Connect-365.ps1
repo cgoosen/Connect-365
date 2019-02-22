@@ -230,11 +230,11 @@ Function Connect-SPO{
 }
 
 Function Connect-Teams{
-
+  Connect-MicrosoftTeams -Credential $Credential
 }
 
 Function Connect-Intune{
-
+  Connect-MSGraph -PSCredential $Credential
 }
 
 Function Get-ModuleInfo-AAD{
@@ -421,6 +421,8 @@ $GUITab_Prereq.add_Loaded({
    Get-PreReq-AAD
    Get-PreReq-SfB
    Get-PreReq-SPO
+   Get-PreReq-Teams
+   Get-PreReq-Intune
 })
 
 $GUIBtn_AADMsg.add_Click({
