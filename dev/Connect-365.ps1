@@ -136,7 +136,7 @@ $XAML = @"
                           <Grid Margin="0,10,0,0">
                               <Label Content="Teams" HorizontalAlignment="Left" FontSize="11"/>
                               <TextBlock Name="Txt_TeamStatus" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" />
-                          <Button Name="Btn_TeamMsg" Content="Download now.." Width="125" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
+                          <Button Name="Btn_TeamsMsg" Content="Download now.." Width="125" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
                     </Grid>
                         </StackPanel>
                         <StackPanel>
