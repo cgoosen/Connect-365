@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Connect to Office 365 servces via PowerShell
+  Connect to Office 365 services via PowerShell
 
 .DESCRIPTION
   This script will prompt for your Office 365 tenant credentials and connect you to any or all Office 365 services via remote PowerShell
