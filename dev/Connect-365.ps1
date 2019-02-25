@@ -15,6 +15,8 @@
   Version:        1.1
   Author:         Chris Goosen (Twitter: @chrisgoosen)
   Creation Date:  02/06/2019
+  Credits:        ExchangeMFAModule handing by Michel de Rooij - eightwone.com, @mderooij
+  Credits:        Bugfinder extraordinaire Greig Sheridan - greiginsydney.com, @greiginsydney
 
 .LINK
   http://www.cgoosen.com
@@ -80,7 +82,7 @@ $XAML = @"
                             <GroupBox Header="Options:" Width="508" Margin="10,10,0,0" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Top">
                                 <Grid Height="50" Margin="0,10,0,0">
                                   <CheckBox Name="Box_MFA" TabIndex="10" HorizontalAlignment="Left" VerticalAlignment="Top">Use MFA?</CheckBox>
-                                  <CheckBox Name="Box_Clob" TabIndex="11" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="78,0,0,0">AllowClobber</CheckBox>
+                                  <CheckBox Name="Box_Clob" TabIndex="11" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="20,0,0,0">AllowClobber</CheckBox>
                                     <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Orientation="Horizontal">
                                         <Label Content="Admin URL:" Width="70"></Label>
                                         <TextBox Name="Field_SPOUrl" Height="22" Width="425" Margin="0,0,0,0" TextWrapping="Wrap" IsEnabled="False" TabIndex="8"></TextBox>
@@ -214,8 +216,19 @@ Function Get-UserPwd{
 }
 
 Function Connect-EXO{
-    $EXOSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
-    Import-PSSession $EXOSession
+    If ($UseMFA -eq "True") {
+      $EXOSession = New-EXOSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $Credential.UserName
+    }
+    Else {
+      $EXOSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
+    }
+
+    If ($Clob -eq "True") {
+      Import-PSSession $EXOSession -AllowClobber
+    }
+    Else {
+      Import-PSSession $EXOSession
+    }
 }
 
 Function Connect-AAD{
@@ -229,7 +242,12 @@ Function Connect-Com{
 
 Function Connect-SfB{
     $SfBSession = New-CsOnlineSession -Credential $Credential
-    Import-PSSession $SfBSession
+    If ($Clob -eq "True") {
+      Import-PSSession $SfBSession -AllowClobber
+    }
+    Else {
+      Import-PSSession $SfBSession
+    }
 }
 
 Function Connect-SPO{
@@ -278,7 +296,7 @@ Function Get-ModuleInfo-SPO{
     }
 }
 
-# ExchangeMFAModule handing by Michel de Rooij - eightwone.com
+# ExchangeMFAModule handing by Michel de Rooij - eightwone.com, @mderooij
 Function Get-ModuleInfo-EXO{
     try {
         $ExchangeMFAModule = 'Microsoft.Exchange.Management.ExoPowershellModule'
