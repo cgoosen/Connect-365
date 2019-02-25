@@ -79,7 +79,8 @@ $XAML = @"
                             </GroupBox>
                             <GroupBox Header="Options:" Width="508" Margin="10,10,0,0" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Top">
                                 <Grid Height="50" Margin="0,10,0,0">
-                                  <CheckBox Name="Box_MFA" TabIndex="8" HorizontalAlignment="Left" VerticalAlignment="Top">Use MFA?</CheckBox>
+                                  <CheckBox Name="Box_MFA" TabIndex="10" HorizontalAlignment="Left" VerticalAlignment="Top">Use MFA?</CheckBox>
+                                  <CheckBox Name="Box_Clob" TabIndex="11" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="78,0,0,0">-AllowClobber</CheckBox>
                                     <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Orientation="Horizontal">
                                         <Label Content="Admin URL:" Width="70"></Label>
                                         <TextBox Name="Field_SPOUrl" Height="22" Width="425" Margin="0,0,0,0" TextWrapping="Wrap" IsEnabled="False" TabIndex="8"></TextBox>
@@ -193,6 +194,12 @@ Function Get-Options{
             $Script:ConnectIntune = $true
             $OptionsArray++
     }
+        If ($GUIBox_MFA.IsChecked -eq "True") {
+            $Script:UseMFA = $true
+    }
+        If ($GUIBox_Clob.IsChecked -eq "True") {
+            $Script:Clob = $true
+    }
 }
 
 Function Get-UserPwd{
@@ -271,6 +278,22 @@ Function Get-ModuleInfo-SPO{
     }
 }
 
+# ExchangeMFAModule handing by Michel de Rooij - eightwone.com
+Function Get-ModuleInfo-EXO{
+    try {
+        $ExchangeMFAModule = 'Microsoft.Exchange.Management.ExoPowershellModule'
+        $ModuleList = @(Get-ChildItem -Path "$($env:LOCALAPPDATA)\Apps\2.0" -Filter "$($local:ExchangeMFAModule).manifest" -Recurse ) | Sort-Object LastWriteTime -Desc | Select-Object -First 1
+        If ( $local:ModuleList) {
+          $ModuleName = Join-path -Path $local:ModuleList[0].Directory.FullName -ChildPath "$($local:ExchangeMFAModule).dll"
+        }
+        Import-Module -FullyQualifiedName $ModuleName -Force
+        return $true
+    }
+    catch {
+        return $false
+    }
+}
+
 Function Get-ModuleInfo-Teams{
     try {
         Import-Module -Name MicrosoftTeams
@@ -336,6 +359,20 @@ function Get-PreReq-SPO{
         $GUITxt_SPOStatus.Foreground = "Green"
         $GUIBtn_SPOMsg.IsEnabled = $false
         $GUIBtn_SPOMsg.Opacity = "0"
+    }
+    else {
+        $GUITxt_SPOStatus.Text = "Failed!"
+        $GUITxt_SPOStatus.Foreground = "Red"
+        $GUIBtn_SPOMsg.IsEnabled = $true
+    }
+}
+
+function Get-PreReq-EXO{
+    If (Get-ModuleInfo-EXO -eq "True") {
+        $GUITxt_EXOStatus.Text = "OK!"
+        $GUITxt_EXOStatus.Foreground = "Green"
+        $GUIBtn_EXOMsg.IsEnabled = $false
+        $GUIBtn_EXOMsg.Opacity = "0"
     }
     else {
         $GUITxt_SPOStatus.Text = "Failed!"
@@ -421,6 +458,7 @@ $GUITab_Prereq.add_Loaded({
    Get-PreReq-AAD
    Get-PreReq-SfB
    Get-PreReq-SPO
+   Get-PreReq-EXO
    Get-PreReq-Teams
    Get-PreReq-Intune
 })
@@ -448,6 +486,16 @@ $GUIBtn_SfBMsg.add_Click({
 $GUIBtn_SPOMsg.add_Click({
     try {
         Start-Process -FilePath http://go.microsoft.com/fwlink/p/?LinkId=255251
+    }
+    catch {
+        $MainWindow.Close()
+        Close-Window "An error occurred..`nExiting script"
+    }
+})
+
+$GUIBtn_EXOMsg.add_Click({
+    try {
+        Start-Process -FilePath http://bit.ly/ExOPSModule
     }
     catch {
         $MainWindow.Close()
@@ -487,6 +535,7 @@ $GUIBox_SPO.add_Checked({
 
 $GUIBox_SPO.add_UnChecked({
     $GUIField_SPOUrl.IsEnabled= "False"
+    $GUIField_SPOUrl.Text = ""
 })
 
 $GUIField_SPOUrl.add_GotFocus({
