@@ -216,14 +216,14 @@ Function Get-UserPwd{
 }
 
 Function Connect-EXO{
-    If ($UseMFA -eq "True") {
-      $EXOSession = New-EXOSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $Credential.UserName
+    If ($UseMFA) {
+    $EXOSession = New-EXOPSSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $UserName
     }
     Else {
       $EXOSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
     }
 
-    If ($Clob -eq "True") {
+    If ($Clob) {
       Import-PSSession $EXOSession -AllowClobber
     }
     Else {
@@ -242,7 +242,7 @@ Function Connect-Com{
 
 Function Connect-SfB{
     $SfBSession = New-CsOnlineSession -Credential $Credential
-    If ($Clob -eq "True") {
+    If ($Clob) {
       Import-PSSession $SfBSession -AllowClobber
     }
     Else {
@@ -300,9 +300,9 @@ Function Get-ModuleInfo-SPO{
 Function Get-ModuleInfo-EXO{
     try {
         $ExchangeMFAModule = 'Microsoft.Exchange.Management.ExoPowershellModule'
-        $ModuleList = @(Get-ChildItem -Path "$($env:LOCALAPPDATA)\Apps\2.0" -Filter "$($local:ExchangeMFAModule).manifest" -Recurse ) | Sort-Object LastWriteTime -Desc | Select-Object -First 1
-        If ( $local:ModuleList) {
-          $ModuleName = Join-path -Path $local:ModuleList[0].Directory.FullName -ChildPath "$($local:ExchangeMFAModule).dll"
+        $ModuleList = @(Get-ChildItem -Path "$($env:LOCALAPPDATA)\Apps\2.0" -Filter "$($ExchangeMFAModule).manifest" -Recurse ) | Sort-Object LastWriteTime -Desc | Select-Object -First 1
+        If ( $ModuleList) {
+          $ModuleName = Join-path -Path $ModuleList[0].Directory.FullName -ChildPath "$($ExchangeMFAModule).dll"
         }
         Import-Module -FullyQualifiedName $ModuleName -Force
         return $true
@@ -426,15 +426,23 @@ function Get-PreReq-Intune{
         $GUIBtn_IntuneMsg.IsEnabled = $true
     }
 }
+function Get-PreReq{
+  Get-PreReq-AAD
+  Get-PreReq-SfB
+  Get-PreReq-SPO
+  Get-PreReq-EXO
+  Get-PreReq-Teams
+  Get-PreReq-Intune
+}
 
 function Get-OKBtn{
-    $Script:Username = $GUIField_User.Text
-    $Pwd = $GUIField_Pwd.Password
-    Get-Options
-    Get-UserPwd
+  $Script:Username = $GUIField_User.Text
+  $Pwd = $GUIField_Pwd.Password
+  Get-Options
+  Get-UserPwd
 	$EncryptPwd = $Pwd | ConvertTo-SecureString -AsPlainText -Force
 	$Script:Credential = New-Object System.Management.Automation.PSCredential($Username,$EncryptPwd)
-    $Script:EndScript = 2
+  $Script:EndScript = 2
 	$MainWindow.Close()
 }
 
@@ -473,12 +481,12 @@ $GUIBtn_Ok.add_Click({
 })
 
 $GUITab_Prereq.add_Loaded({
-   Get-PreReq-AAD
-   Get-PreReq-SfB
-   Get-PreReq-SPO
-   Get-PreReq-EXO
-   Get-PreReq-Teams
-   Get-PreReq-Intune
+   # Get-PreReq-AAD
+   # Get-PreReq-SfB
+   # Get-PreReq-SPO
+   # Get-PreReq-EXO
+   # Get-PreReq-Teams
+   # Get-PreReq-Intune
 })
 
 $GUIBtn_AADMsg.add_Click({
@@ -571,6 +579,11 @@ $GUIBtn_About.add_Click({
 $GUIBtn_Help.add_Click({
     Start-Process -FilePath http://cgoo.se/1srvTiS
 })
+
+# Script re-req checks
+Write-Host "Starting script..`nLooking for installed modules.." -ForegroundColor Green
+Get-PreReq
+Write-Host "Done!" -ForegroundColor Green
 
 # Load GUI Window
 $MainWindow.WindowStartupLocation = "CenterScreen"
