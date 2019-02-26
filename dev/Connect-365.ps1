@@ -82,17 +82,17 @@ $XAML = @"
                             <GroupBox Header="Options:" Width="508" Margin="10,10,0,0" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Top">
                                 <Grid Height="50" Margin="0,10,0,0">
                                   <CheckBox Name="Box_MFA" TabIndex="10" HorizontalAlignment="Left" VerticalAlignment="Top">Use MFA?</CheckBox>
-                                  <CheckBox Name="Box_Clob" TabIndex="11" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="20,0,0,0">AllowClobber</CheckBox>
+                                  <CheckBox Name="Box_Clob" TabIndex="11" HorizontalAlignment="Center" VerticalAlignment="Top" IsEnabled="False" Margin="20,0,0,0">AllowClobber</CheckBox>
                                     <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Orientation="Horizontal">
                                         <Label Content="Admin URL:" Width="70"></Label>
-                                        <TextBox Name="Field_SPOUrl" Height="22" Width="425" Margin="0,0,0,0" TextWrapping="Wrap" IsEnabled="False" TabIndex="8"></TextBox>
+                                        <TextBox Name="Field_SPOUrl" Height="22" Width="425" Margin="0,0,0,0" TextWrapping="Wrap" IsEnabled="False" TabIndex="12"></TextBox>
                                     </StackPanel>
                                 </Grid>
                             </GroupBox>
                         </StackPanel>
                         <StackPanel Height="45" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,10,0,0">
-                            <Button Name="Btn_Ok" Content="Ok" Width="75" Height="25" VerticalAlignment="Top" HorizontalAlignment="Center" TabIndex="9" />
-                            <Button Name="Btn_Cancel" Content="Cancel" Width="75" Height="25" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="40,0,0,0" TabIndex="10" />
+                            <Button Name="Btn_Ok" Content="Ok" Width="75" Height="25" VerticalAlignment="Top" HorizontalAlignment="Center" TabIndex="13" />
+                            <Button Name="Btn_Cancel" Content="Cancel" Width="75" Height="25" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="40,0,0,0" TabIndex="14" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>
@@ -217,12 +217,11 @@ Function Get-UserPwd{
 
 Function Connect-EXO{
     If ($UseMFA) {
-    $EXOSession = New-EXOPSSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $UserName
+      $EXOSession = New-EXOPSSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $UserName
     }
     Else {
       $EXOSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
     }
-
     If ($Clob) {
       Import-PSSession $EXOSession -AllowClobber
     }
@@ -232,16 +231,36 @@ Function Connect-EXO{
 }
 
 Function Connect-AAD{
-    Connect-AzureAD -Credential $Credential
+    If ($UseMFA) {
+      Connect-AzureAD -AccountId $UserName
+    }
+    Else {
+      Connect-AzureAD -Credential $Credential
+    }
 }
 
 Function Connect-Com{
-    $CCSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://ps.compliance.protection.outlook.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
-    Import-PSSession $CCSession
+    If ($UseMFA) {
+      $CCSession = New-EXOPSSession -ConnectionUri https://ps.compliance.protection.outlook.com/powershell-liveid/ -UserPrincipalName $UserName
+    }
+    Else {
+      $CCSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://ps.compliance.protection.outlook.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
+    }
+    If ($Clob) {
+      Import-PSSession $CCSession -AllowClobber
+    }
+    Else {
+      Import-PSSession $CCSession
+    }
 }
 
 Function Connect-SfB{
-    $SfBSession = New-CsOnlineSession -Credential $Credential
+    If ($UseMFA) {
+      $SfBSession = New-CsOnlineSession -UserName $UserName
+    }
+    Else {
+      $SfBSession = New-CsOnlineSession -Credential $Credential
+    }
     If ($Clob) {
       Import-PSSession $SfBSession -AllowClobber
     }
@@ -251,39 +270,50 @@ Function Connect-SfB{
 }
 
 Function Connect-SPO{
-    Connect-SPOService -Url $GUIField_SPOUrl.text -Credential $Credential
+    If ($UseMFA) {
+      Connect-SPOService -Url $GUIField_SPOUrl.text
+    }
+    Else {
+      Connect-SPOService -Url $GUIField_SPOUrl.text -Credential $Credential
+    }
 }
 
 Function Connect-Teams{
-  Connect-MicrosoftTeams -Credential $Credential
+    If ($UseMFA) {
+      Connect-MicrosoftTeams -AccountId $UserName
+    }
+    Else {
+      Connect-MicrosoftTeams -Credential $Credential
+    }
 }
 
 Function Connect-Intune{
-  Connect-MSGraph -PSCredential $Credential
+    If ($UseMFA) {
+      Connect-MSGraph -PSCredential $Credential
+    }
+    Else {
+      Connect-MSGraph
+    }
 }
 
 Function Get-ModuleInfo-AAD{
-    If( !(Get-Module -Name AzureAD)) {
-        try {
-            Import-Module -Name AzureAD
-            return $true
-        }
-        catch {
-            return $false
-        }
-    }
+      try {
+          Import-Module -Name AzureAD
+          return $true
+      }
+      catch {
+          return $false
+      }
 }
 
 Function Get-ModuleInfo-SfB{
-    If( !(Get-Module -Name SkypeOnlineConnector)) {
-        try {
-            Import-Module -Name SkypeOnlineConnector
-            return $true
-        }
-        catch {
-            return $false
-        }
-    }
+      try {
+          Import-Module -Name SkypeOnlineConnector
+          return $true
+      }
+      catch {
+          return $false
+      }
 }
 
 Function Get-ModuleInfo-SPO{
@@ -481,12 +511,7 @@ $GUIBtn_Ok.add_Click({
 })
 
 $GUITab_Prereq.add_Loaded({
-   # Get-PreReq-AAD
-   # Get-PreReq-SfB
-   # Get-PreReq-SPO
-   # Get-PreReq-EXO
-   # Get-PreReq-Teams
-   # Get-PreReq-Intune
+
 })
 
 $GUIBtn_AADMsg.add_Click({
@@ -550,9 +575,16 @@ $GUIBtn_IntuneMsg.add_Click({
 })
 
 $GUIBox_EXO.add_Click({
-    $GUIBox_EXO.IsChecked -eq "True"
+    $GUIBox_Clob.IsEnabled = "True"
 })
 
+$GUIBox_Com.add_Click({
+    $GUIBox_Clob.IsEnabled = "True"
+})
+
+$GUIBox_SfB.add_Click({
+    $GUIBox_Clob.IsEnabled = "True"
+})
 
 $GUIBox_SPO.add_Checked({
     $GUIField_SPOUrl.IsEnabled = "True"
@@ -560,7 +592,7 @@ $GUIBox_SPO.add_Checked({
 })
 
 $GUIBox_SPO.add_UnChecked({
-    $GUIField_SPOUrl.IsEnabled= "False"
+    $GUIField_SPOUrl.IsEnabled = "False"
     $GUIField_SPOUrl.Text = ""
 })
 
