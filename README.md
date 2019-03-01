@@ -15,6 +15,8 @@ The current version of the script allows connectivity to:
 * Office 365 Security & Compliance Center
 * Skype for Business Online
 * SharePoint Online
+* Teams
+* Intune
 
 **Requirements:**
 This script will work natively in PowerShell 4.0+
@@ -24,8 +26,8 @@ There are no parameters or switches, simply execute the script: .\Connect-365.ps
 
 **Screenshots:**
 
-![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/a-768x564.png)
+![alt text](https://www.cgoosen.com/wp-content/uploads/2019/02/Screen-Shot-2019-02-27-at-2.09.37-PM.png)
 
-![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/b-768x564.png)
+![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/Screen-Shot-2019-02-27-at-2.09.09-PM.png)
 
 ![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/c-768x153.png)
