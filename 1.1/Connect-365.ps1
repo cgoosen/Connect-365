@@ -423,9 +423,9 @@ function Get-PreReq-EXO{
         $GUIBtn_EXOMsg.Opacity = "0"
     }
     else {
-        $GUITxt_SPOStatus.Text = "Failed!"
-        $GUITxt_SPOStatus.Foreground = "Red"
-        $GUIBtn_SPOMsg.IsEnabled = $true
+        $GUITxt_EXOStatus.Text = "Failed!"
+        $GUITxt_EXOStatus.Foreground = "Red"
+        $GUIBtn_EXOMsg.IsEnabled = $true
     }
 }
 

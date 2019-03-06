@@ -1,7 +1,7 @@
 # Connect-365
 ## A GUI script that simplifies the process of connecting to Office 365 services using remote PowerShell.
 
-I’m excited to announce the release of Connect-365! Back 2012, I put together a basic script with a GUI to simplify connecting to Exchange Online via remote PowerShell. I had never intended to make the script publicly available and it was just something I used myself. After a couple years I realized that it had been shared with so many colleagues and clients that I decided to clean it up and publish it on the TechNet gallery. Connect-EXO was born! Here’s a screenshot of the original first version:
+I’m excited to announce the release of Connect-365! Back in 2012, I put together a basic script with a GUI to simplify connecting to Exchange Online via remote PowerShell. I had never intended to make the script publicly available and it was just something I used myself. After a couple years I realized that it had been shared with so many colleagues and clients that I decided to clean it up and publish it on the TechNet gallery. Connect-EXO was born! Here’s a screenshot of the original first version:
 
 ![alt text](https://www.cgoosen.com/wp-content/uploads/2017/03/Capture1-300x281.png)
 
