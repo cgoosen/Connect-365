@@ -12,11 +12,12 @@
   None
 
 .NOTES
-  Version:        1.1
+  Version:        1.1.1
   Author:         Chris Goosen (Twitter: @chrisgoosen)
-  Creation Date:  02/06/2019
+  Creation Date:  03/06/2019
   Credits:        ExchangeMFAModule handling by Michel de Rooij - eightwone.com, @mderooij
                   Bugfinder extraordinaire Greig Sheridan - greiginsydney.com, @greiginsydney
+                  Various bugfixes: Andy Helsby - github.com/Absoblogginlutely
 
 .LINK
   http://www.cgoosen.com
@@ -25,7 +26,7 @@
   .\Connect-365.ps1
 #>
 $ErrorActionPreference = "Stop"
-
+$ScriptVersion = "1.1.1"
 #region XAML code
 $XAML = @"
 <Window
@@ -613,7 +614,7 @@ $GUIBtn_Help.add_Click({
 })
 
 # Script re-req checks
-Write-Host "Starting script..`nLooking for installed modules.." -ForegroundColor Green
+Write-Host "Starting script version $ScriptVersion..`nLooking for installed modules.." -ForegroundColor Green
 Get-PreReq
 Write-Host "Done!" -ForegroundColor Green
 
