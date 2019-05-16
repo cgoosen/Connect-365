@@ -160,6 +160,8 @@ $XAML = @"
                           <Button Name="Btn_IntuneMsg" Content="Download now.." Width="125" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
                     </Grid>
                         </StackPanel>
+												<StackPanel>
+												</StackPanel>
                         <StackPanel Height="45" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,10,0,0">
                             <Button Name="Btn_ReCheck" Content="Re-Check" Width="75" Height="25" VerticalAlignment="Top" HorizontalAlignment="Center" TabIndex="16" />
                         </StackPanel>
@@ -636,6 +638,10 @@ $GUIBtn_About.add_Click({
 
 $GUIBtn_Help.add_Click({
     Start-Process -FilePath http://cgoo.se/1srvTiS
+})
+
+$GUIBtn_ReCheck.add_Click({
+		Get-PreReq
 })
 
 # Script re-req checks
