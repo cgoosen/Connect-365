@@ -12,7 +12,7 @@
   None
 
 .NOTES
-  Version:        1.1
+  Version:        1.2
   Author:         Chris Goosen (Twitter: @chrisgoosen)
   Creation Date:  02/06/2019
   Credits:        ExchangeMFAModule handling by Michel de Rooij - eightwone.com, @mderooij
@@ -25,6 +25,17 @@
   .\Connect-365.ps1
 #>
 $ErrorActionPreference = "Stop"
+$ScriptVersion = "1.2"
+$AzureEndpoint = 'https://cgoosen.table.core.windows.net/'
+$AzureSAS = "?sv=2018-03-28&ss=t&srt=co&sp=r&se=2021-05-16T21:57:04Z&st=2019-05-16T13:57:04Z&spr=https&sig=AM0sVufX8kidpsPFYb3nGm6EXTTA1tKM0M%2B4q23u0LY%3D"
+$AzureRequestHeaders = @{
+		"x-ms-date"=(Get-Date -Format r);
+		"x-ms-version"="2016-05-31";
+		"Accept-Charset"="UTF-8";
+		"DataServiceVersion"="3.0;NetFx";
+		"MaxDataServiceVersion"="3.0;NetFx";
+		"Accept"="application/json;odata=nometadata"}
+$URI = $AzureEndpoint + "VersionChecker" + "/" + $AzureSAS
 
 #region XAML code
 $XAML = @"
@@ -97,7 +108,7 @@ $XAML = @"
                     </StackPanel>
                 </Grid>
             </TabItem>
-            <TabItem Name="Tab_Prereq" Header="Prerequisite Checker" TabIndex="11">
+            <TabItem Name="Tab_Prereq" Header="Prerequisite Checker" TabIndex="15">
                 <Grid Background="White">
                     <StackPanel>
                         <StackPanel>
@@ -148,6 +159,9 @@ $XAML = @"
                               <TextBlock Name="Txt_IntuneStatus" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" />
                           <Button Name="Btn_IntuneMsg" Content="Download now.." Width="125" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
                     </Grid>
+                        </StackPanel>
+                        <StackPanel Height="45" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,10,0,0">
+                            <Button Name="Btn_ReCheck" Content="Re-Check" Width="75" Height="25" VerticalAlignment="Top" HorizontalAlignment="Center" TabIndex="16" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>
@@ -482,6 +496,18 @@ function Get-CancelBtn{
 	Close-Window 'Script cancelled'
 }
 
+function Check-ScriptVersion{
+  $VersionCheck = Invoke-RestMethod -Method GET -Uri $URI -Headers $AzureRequestHeaders
+  $LatestVersion = $VersionCheck.value | Where-Object {$_.PartitionKey -like '*Connect-365*'} | Select RowKey
+  If ($ScriptVersion -eq $LatestVersion.RowKey){
+    Write-Host "You are running the latest version" -ForegroundColor Green
+  }
+  Elseif ($ScriptVersion -ne $LatestVersion.RowKey)
+  {
+    Write-Host "A newer version is available, please update to the latest version" -ForegroundColor Red
+  }
+}
+
 # Event Handlers
 $MainWindow.add_KeyDown({
     param
@@ -616,6 +642,9 @@ $GUIBtn_Help.add_Click({
 Write-Host "Starting script..`nLooking for installed modules.." -ForegroundColor Green
 Get-PreReq
 Write-Host "Done!" -ForegroundColor Green
+#Check for newer version of the script
+Write-Host "Checking script version.." -ForegroundColor Green
+Check-ScriptVersion
 
 # Load GUI Window
 $MainWindow.WindowStartupLocation = "CenterScreen"
