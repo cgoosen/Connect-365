@@ -57,7 +57,7 @@ $XAML = @"
 
                 <MenuItem Header="_Help">
                     <MenuItem Header="_About">
-                        <MenuItem Name="Btn_About" Header="_Script Version 1.1"/>
+                        <MenuItem Name="Btn_About" Header="_Script Version $ScriptVersion"/>
                         </MenuItem>
                     <MenuItem Name="Btn_Help" Header="_Get Help" />
                 </MenuItem>
