@@ -12,9 +12,9 @@
   None
 
 .NOTES
-  Version:        1.1.2
+  Version:        1.2
   Author:         Chris Goosen (Twitter: @chrisgoosen)
-  Creation Date:  15 March 2022
+  Creation Date:  6 October 2022
   Credits:        ExchangeMFAModule handling by Michel de Rooij - eightwone.com, @mderooij
                   Bugfinder extraordinaire Greig Sheridan - greiginsydney.com, @greiginsydney
                   Various bugfixes: Andy Helsby - github.com/Absoblogginlutely
@@ -26,7 +26,10 @@
   .\Connect-365.ps1
 #>
 $ErrorActionPreference = "Stop"
-$ScriptVersion = "1.1.2"
+$ScriptVersion = "1.2"
+$ScriptName = "Connect365"
+$ScriptDisplayName = "Connect-365"
+$ScriptURL = "https://github.com/cgoosen/Connect-365/releases/"
 #region XAML code
 $XAML = @"
 <Window
@@ -47,7 +50,7 @@ $XAML = @"
 
                 <MenuItem Header="_Help">
                     <MenuItem Header="_About">
-                        <MenuItem Name="Btn_About" Header="_Script Version 1.1"/>
+                        <MenuItem Name="Btn_About" Header="_Script Version $ScriptVersion"/>
                         </MenuItem>
                     <MenuItem Name="Btn_Help" Header="_Get Help" />
                 </MenuItem>
@@ -82,7 +85,7 @@ $XAML = @"
                             </GroupBox>
                             <GroupBox Header="Options:" Width="508" Margin="10,10,0,0" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Top">
                                 <Grid Height="50" Margin="0,10,0,0">
-                                  <CheckBox Name="Box_MFA" TabIndex="10" HorizontalAlignment="Left" VerticalAlignment="Top">Use MFA?</CheckBox>
+                                  <CheckBox Name="Box_MFA" TabIndex="10" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True" IsEnabled="False">Use MFA?</CheckBox>
                                   <CheckBox Name="Box_Clob" TabIndex="11" HorizontalAlignment="Center" VerticalAlignment="Top" IsEnabled="False" Margin="20,0,0,0">AllowClobber</CheckBox>
                                     <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Orientation="Horizontal">
                                         <Label Content="Admin URL:" Width="70"></Label>
@@ -168,6 +171,27 @@ $MainWindow=[Windows.Markup.XamlReader]::Load( $Reader )
 $XAMLGui.SelectNodes("//*[@Name]") | ForEach-Object {Set-Variable -Name "GUI$($_.Name)" -Value $MainWindow.FindName($_.Name)}
 
 # Functions
+Function Get-ScriptVersion{
+    [CmdletBinding()]
+  param(
+      [Parameter()]
+      [string]$CurrentVersion,
+      [string]$ScriptName
+  )
+  $LatestVersion = Invoke-RestMethod -Method Get -Uri https://cgoosen.azure-api.net/Versions/GetVersion?Name=$ScriptName
+  If (!$LatestVersion -or $LatestVersion -eq "Error: Something went wrong.."){
+    Write-Host "Unable to perform version check, visit $ScriptURL to check if you're running the latest version" -ForegroundColor Red
+  }
+  Else {
+    If ($LatestVersion -gt $CurrentVersion){
+    Write-Host "A newer version of $ScriptDisplayName is available, visit $ScriptURL to download the latest version" -ForegroundColor Red
+    }
+    Elseif ($LatestVersion -eq $CurrentVersion){
+      Write-Host "You are running the latest version of $ScriptDisplayName" -ForegroundColor Green
+    }
+  }
+}
+
 Function Get-Options{
         If ($GUIBox_EXO.IsChecked -eq "True") {
             $Script:ConnectEXO = $true
@@ -206,9 +230,10 @@ Function Get-Options{
 }
 
 Function Get-UserPwd{
-        If (!$Username -or !$Pwd) {
+  #Password no longer needed as modern auth workflow will prompt for it again
+        If (!$Username) {
             $MainWindow.Close()
-            Close-Window "Please enter valid credentials..`nScript failed"
+            Close-Window "Please enter a valid UserName..`nScript failed"
     }
         ElseIf ($OptionsArray -eq "0") {
             $MainWindow.Close()
@@ -217,12 +242,7 @@ Function Get-UserPwd{
 }
 
 Function Connect-EXO{
-    If ($UseMFA) {
-      $EXOSession = New-EXOPSSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $UserName
-    }
-    Else {
-      $EXOSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
-    }
+    $EXOSession = New-EXOPSSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $UserName
     If ($Clob) {
       Import-PSSession $EXOSession -AllowClobber
     }
@@ -232,21 +252,11 @@ Function Connect-EXO{
 }
 
 Function Connect-AAD{
-    If ($UseMFA) {
-      Connect-AzureAD -AccountId $UserName
-    }
-    Else {
-      Connect-AzureAD -Credential $Credential
-    }
+  Connect-AzureAD -AccountId $UserName
 }
 
 Function Connect-Com{
-    If ($UseMFA) {
-      $CCSession = New-EXOPSSession -ConnectionUri https://ps.compliance.protection.outlook.com/powershell-liveid/ -UserPrincipalName $UserName
-    }
-    Else {
-      $CCSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://ps.compliance.protection.outlook.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
-    }
+    $CCSession = New-EXOPSSession -ConnectionUri https://ps.compliance.protection.outlook.com/powershell-liveid/ -UserPrincipalName $UserName
     If ($Clob) {
       Import-PSSession $CCSession -AllowClobber
     }
@@ -256,12 +266,7 @@ Function Connect-Com{
 }
 
 Function Connect-SfB{
-    If ($UseMFA) {
-      $SfBSession = New-CsOnlineSession -UserName $UserName
-    }
-    Else {
-      $SfBSession = New-CsOnlineSession -Credential $Credential
-    }
+    $SfBSession = New-CsOnlineSession -UserName $UserName
     If ($Clob) {
       Import-PSSession $SfBSession -AllowClobber
     }
@@ -271,30 +276,15 @@ Function Connect-SfB{
 }
 
 Function Connect-SPO{
-    If ($UseMFA) {
-      Connect-SPOService -Url $GUIField_SPOUrl.text
-    }
-    Else {
-      Connect-SPOService -Url $GUIField_SPOUrl.text -Credential $Credential
-    }
+    Connect-SPOService -Url $GUIField_SPOUrl.text
 }
 
 Function Connect-Teams{
-    If ($UseMFA) {
-      Connect-MicrosoftTeams -AccountId $UserName
-    }
-    Else {
-      Connect-MicrosoftTeams -Credential $Credential
-    }
+    Connect-MicrosoftTeams -AccountId $UserName
 }
 
 Function Connect-Intune{
-    If ($UseMFA) {
-      Connect-MSGraph
-    }
-    Else {
-      Connect-MSGraph -PSCredential $Credential
-    }
+    Connect-MSGraph
 }
 
 Function Get-ModuleInfo-AAD{
@@ -468,11 +458,13 @@ function Get-PreReq{
 
 function Get-OKBtn{
   $Script:Username = $GUIField_User.Text
-  $Pwd = $GUIField_Pwd.Password
+  $Passwd = $GUIField_Pwd.Password
   Get-Options
   Get-UserPwd
-	$EncryptPwd = $Pwd | ConvertTo-SecureString -AsPlainText -Force
-	$Script:Credential = New-Object System.Management.Automation.PSCredential($Username,$EncryptPwd)
+  If ($Passwd) {
+  	$EncryptPwd = $Passwd | ConvertTo-SecureString -AsPlainText -Force
+  	$Script:Credential = New-Object System.Management.Automation.PSCredential($Username,$EncryptPwd)
+  }
   $Script:EndScript = 2
 	$MainWindow.Close()
 }
@@ -614,7 +606,10 @@ $GUIBtn_Help.add_Click({
 })
 
 # Script re-req checks
-Write-Host "Starting script version $ScriptVersion..`nLooking for installed modules.." -ForegroundColor Green
+Write-Host "Starting script version $ScriptVersion..`nLooking for newer version.." -ForegroundColor Green
+Get-ScriptVersion -CurrentVersion $ScriptVersion -ScriptName $ScriptName
+Write-Host "Done!" -ForegroundColor Green
+Write-Host "Looking for installed modules.." -ForegroundColor Green
 Get-PreReq
 Write-Host "Done!" -ForegroundColor Green
 
