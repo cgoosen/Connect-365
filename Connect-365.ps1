@@ -12,9 +12,9 @@
   None
 
 .NOTES
-  Version:        1.2
+  Version:        1.2.1
   Author:         Chris Goosen (Twitter: @chrisgoosen)
-  Creation Date:  6 October 2022
+  Creation Date:  22 December 2022
   Credits:        ExchangeMFAModule handling by Michel de Rooij - eightwone.com, @mderooij
                   Bugfinder extraordinaire Greig Sheridan - greiginsydney.com, @greiginsydney
                   Various bugfixes: Andy Helsby - github.com/Absoblogginlutely
@@ -26,7 +26,7 @@
   .\Connect-365.ps1
 #>
 $ErrorActionPreference = "Stop"
-$ScriptVersion = "1.2"
+$ScriptVersion = "1.2.1"
 $ScriptName = "Connect365"
 $ScriptDisplayName = "Connect-365"
 $ScriptURL = "https://github.com/cgoosen/Connect-365/releases/"
