@@ -12,9 +12,9 @@
   None
 
 .NOTES
-  Version:        1.2.1
+  Version:        1.3
   Author:         Chris Goosen (Twitter: @chrisgoosen)
-  Creation Date:  22 December 2022
+  Creation Date:  26 Feb 2023
   Credits:        ExchangeMFAModule handling by Michel de Rooij - eightwone.com, @mderooij
                   Bugfinder extraordinaire Greig Sheridan - greiginsydney.com, @greiginsydney
                   Various bugfixes: Andy Helsby - github.com/Absoblogginlutely
@@ -26,7 +26,7 @@
   .\Connect-365.ps1
 #>
 $ErrorActionPreference = "Stop"
-$ScriptVersion = "1.2.1"
+$ScriptVersion = "1.3"
 $ScriptName = "Connect365"
 $ScriptDisplayName = "Connect-365"
 $ScriptURL = "https://github.com/cgoosen/Connect-365/releases/"
@@ -61,7 +61,7 @@ $XAML = @"
                 <Grid Background="White">
                     <StackPanel>
                         <StackPanel Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Width="538" Margin="0,0,0,0">
-                            <Label Content="Office 365 Remote PowerShell" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0" Height="32" FontWeight="Bold"/>
+                            <Label Content="Microsoft 365 Remote PowerShell" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0" Height="32" FontWeight="Bold"/>
                         </StackPanel>
                         <StackPanel Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Width="538" Margin="0,0,0,0" Orientation="Horizontal">
                             <Label Content="Username:" HorizontalAlignment="Left" Height="32" Margin="10,0,0,0" VerticalAlignment="Center" Width="70" FontSize="11" VerticalContentAlignment="Center"/>
@@ -78,7 +78,7 @@ $XAML = @"
                                     <CheckBox Name="Box_AAD" TabIndex="4" HorizontalAlignment="Center" VerticalAlignment="Top">Azure AD</CheckBox>
                                     <CheckBox Name="Box_Com" TabIndex="5" HorizontalAlignment="Right" VerticalAlignment="Top">Compliance Center</CheckBox>
                                     <CheckBox Name="Box_SPO" TabIndex="6" HorizontalAlignment="Left" VerticalAlignment="Center">SharePoint Online</CheckBox>
-                                    <CheckBox Name="Box_SfB" TabIndex="7" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="78,0,0,0">Skype for Business Online</CheckBox>
+                                    <CheckBox Name="Box_MSO" TabIndex="7" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50,0,0,0">Azure AD MSOnline</CheckBox>
                                     <CheckBox Name="Box_Teams" TabIndex="8" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,62,0">Teams</CheckBox>
                                     <CheckBox Name="Box_Intune" TabIndex="9" HorizontalAlignment="Left" VerticalAlignment="Bottom">Intune</CheckBox>
                                 </Grid>
@@ -129,9 +129,9 @@ $XAML = @"
                         </StackPanel>
                         <StackPanel>
                             <Grid Margin="0,10,0,0">
-                                <Label Content="Skype for Business Online" HorizontalAlignment="Left" FontSize="11"/>
-                                <TextBlock Name="Txt_SfBStatus" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" />
-                                <Button Name="Btn_SfBMsg" Content="Download now.." Width="125" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <Label Content="Azure AD MSOnline" HorizontalAlignment="Left" FontSize="11"/>
+                                <TextBlock Name="Txt_MSOStatus" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+                                <Button Name="Btn_MSOMsg" Content="Download now.." Width="125" Height="25" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
                             </Grid>
                         </StackPanel>
                             <Grid Margin="0,10,0,0">
@@ -205,8 +205,8 @@ Function Get-Options{
             $Script:ConnectCom = $true
             $OptionsArray++
     }
-        If ($GUIBox_SfB.IsChecked -eq "True") {
-            $Script:ConnectSfB = $true
+        If ($GUIBox_MSO.IsChecked -eq "True") {
+            $Script:ConnectMSO = $true
             $OptionsArray++
     }
         If ($GUIBox_SPO.IsChecked -eq "True") {
@@ -224,9 +224,6 @@ Function Get-Options{
         If ($GUIBox_MFA.IsChecked -eq "True") {
             $Script:UseMFA = $true
     }
-        If ($GUIBox_Clob.IsChecked -eq "True") {
-            $Script:Clob = $true
-    }
 }
 
 Function Get-UserPwd{
@@ -242,13 +239,18 @@ Function Get-UserPwd{
 }
 
 Function Connect-EXO{
-    $EXOSession = New-EXOPSSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $UserName
-    If ($Clob) {
-      Import-PSSession $EXOSession -AllowClobber
+    If (Get-ModuleInfo-EXOv3 -eq "True") {
+        Connect-ExchangeOnline -UserPrincipalName $UserName -ShowBanner:$false
     }
-    Else {
-      Import-PSSession $EXOSession
-    }
+   ElseIf (Get-ModuleInfo-EXO -eq "True") {
+        $EXOSession = New-EXOPSSession -ConnectionUri https://outlook.office365.com/powershell-liveid/ -UserPrincipalName $UserName
+        If ($Clob) {
+        Import-PSSession $EXOSession -AllowClobber
+        }
+        Else {
+        Import-PSSession $EXOSession
+        }
+   }
 }
 
 Function Connect-AAD{
@@ -265,14 +267,8 @@ Function Connect-Com{
     }
 }
 
-Function Connect-SfB{
-    $SfBSession = New-CsOnlineSession -UserName $UserName
-    If ($Clob) {
-      Import-PSSession $SfBSession -AllowClobber
-    }
-    Else {
-      Import-PSSession $SfBSession
-    }
+Function Connect-MSO{
+    Connect-MsolService
 }
 
 Function Connect-SPO{
@@ -297,9 +293,9 @@ Function Get-ModuleInfo-AAD{
       }
 }
 
-Function Get-ModuleInfo-SfB{
+Function Get-ModuleInfo-MSO{
       try {
-          Import-Module -Name SkypeOnlineConnector
+          Import-Module -Name MSOnline
           return $true
       }
       catch {
@@ -326,6 +322,16 @@ Function Get-ModuleInfo-EXO{
           $ModuleName = Join-path -Path $ModuleList[0].Directory.FullName -ChildPath "$($ExchangeMFAModule).dll"
         }
         Import-Module -FullyQualifiedName $ModuleName -Force
+        return $true
+    }
+    catch {
+        return $false
+    }
+}
+
+Function Get-ModuleInfo-EXOv3{
+    try {
+        Import-Module -Name ExchangeOnlineManagement
         return $true
     }
     catch {
@@ -378,17 +384,17 @@ function Get-PreReq-AAD{
     }
 }
 
-function Get-PreReq-SfB{
-    If (Get-ModuleInfo-SfB -eq "True") {
-        $GUITxt_SfBStatus.Text = "OK!"
-        $GUITxt_SfBStatus.Foreground = "Green"
-        $GUIBtn_SfBMsg.IsEnabled = $false
-        $GUIBtn_SfBMsg.Opacity = "0"
+function Get-PreReq-MSO{
+    If (Get-ModuleInfo-MSO -eq "True") {
+        $GUITxt_MSOStatus.Text = "OK!"
+        $GUITxt_MSOStatus.Foreground = "Green"
+        $GUIBtn_MSOMsg.IsEnabled = $false
+        $GUIBtn_MSOMsg.Opacity = "0"
     }
     else {
-        $GUITxt_SfBStatus.Text = "Failed!"
-        $GUITxt_SfBStatus.Foreground = "Red"
-        $GUIBtn_SfBMsg.IsEnabled = $true
+        $GUITxt_MSOStatus.Text = "Failed!"
+        $GUITxt_MSOStatus.Foreground = "Red"
+        $GUIBtn_MSOMsg.IsEnabled = $true
     }
 }
 
@@ -407,7 +413,7 @@ function Get-PreReq-SPO{
 }
 
 function Get-PreReq-EXO{
-    If (Get-ModuleInfo-EXO -eq "True") {
+    If (Get-ModuleInfo-EXO -eq "True" -or Get-ModuleInfo-EXOv3 -eq "True") {
         $GUITxt_EXOStatus.Text = "OK!"
         $GUITxt_EXOStatus.Foreground = "Green"
         $GUIBtn_EXOMsg.IsEnabled = $false
@@ -449,7 +455,7 @@ function Get-PreReq-Intune{
 }
 function Get-PreReq{
   Get-PreReq-AAD
-  Get-PreReq-SfB
+  Get-PreReq-MSO
   Get-PreReq-SPO
   Get-PreReq-EXO
   Get-PreReq-Teams
@@ -517,9 +523,9 @@ $GUIBtn_AADMsg.add_Click({
     }
 })
 
-$GUIBtn_SfBMsg.add_Click({
+$GUIBtn_MSOMsg.add_Click({
     try {
-        Start-Process -FilePath http://go.microsoft.com/fwlink/?LinkId=294688
+        Start-Process -FilePath https://www.powershellgallery.com/packages/MSOnline
     }
     catch {
         $MainWindow.Close()
@@ -539,7 +545,7 @@ $GUIBtn_SPOMsg.add_Click({
 
 $GUIBtn_EXOMsg.add_Click({
     try {
-        Start-Process -FilePath http://bit.ly/ExOPSModule
+        Start-Process -FilePath https://www.powershellgallery.com/packages/ExchangeOnlineManagement
     }
     catch {
         $MainWindow.Close()
@@ -575,9 +581,6 @@ $GUIBox_Com.add_Click({
     $GUIBox_Clob.IsEnabled = "True"
 })
 
-$GUIBox_SfB.add_Click({
-    $GUIBox_Clob.IsEnabled = "True"
-})
 
 $GUIBox_SPO.add_Checked({
     $GUIField_SPOUrl.IsEnabled = "True"
@@ -621,16 +624,6 @@ $MainWindow.ShowDialog() | Out-Null
 If ($EndScript -eq 1){
     Close-Window 'Script cancelled'
 }
-
-# Connect to Skype for Business Online if required
-If ($ConnectSfB -eq "True"){
-     Try {
-         Connect-Sfb
-     }
-     Catch 	{
-         Get-FailedMsg 'Skype for Business Online error'
-     }
- }
 
 # Connect to EXO if required
 If ($ConnectEXO -eq "True"){
@@ -693,6 +686,16 @@ If ($ConnectIntune -eq "True"){
     }
 }
 
+# Connect to Azure AD MSOnline if required
+If ($ConnectMSO -eq "True"){
+    Try {
+        Connect-MSO
+    }
+    Catch 	{
+        Get-FailedMsg 'Azure AD MSOnline error'
+    }
+}
+
 # Notifications/Information
 Clear-Host
 Write-Host "
@@ -707,8 +710,8 @@ If ($ConnectAAD -eq "True"){
 If ($ConnectCom -eq "True"){
     Write-Host "-Office 365 Security & Compliance Center" -ForegroundColor Yellow -BackgroundColor Black
 }
-If ($ConnectSfB -eq "True"){
-    Write-Host "-Skype for Business Online" -ForegroundColor Yellow -BackgroundColor Black
+If ($ConnectMSO -eq "True"){
+    Write-Host "-Azure AD MSOnline" -ForegroundColor Yellow -BackgroundColor Black
 }
 If ($ConnectSPO -eq "True"){
     Write-Host "-SharePoint Online" -ForegroundColor Yellow -BackgroundColor Black

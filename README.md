@@ -15,7 +15,7 @@ The current version of the script allows connectivity to:
 * Exchange Online
 * Azure Active Directory (using v2 module)
 * Office 365 Security & Compliance Center
-* Skype for Business Online
+* Azure Active Directory (using MSOL module)
 * SharePoint Online
 * Teams
 * Intune
