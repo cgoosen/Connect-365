@@ -12,10 +12,10 @@
   None
 
 .NOTES
-  Version:        1.3
+  Version:        1.3.1
   Author:         Chris Goosen (Twitter: @chrisgoosen)
-  Creation Date:  26 Feb 2023
-  Credits:        ExchangeMFAModule handling by Michel de Rooij - eightwone.com, @mderooij
+  Creation Date:  23 Nov 2023
+  Credits:        Ver >= 1.3 ExchangeMFAModule handling by Michel de Rooij - eightwone.com, @mderooij
                   Bugfinder extraordinaire Greig Sheridan - greiginsydney.com, @greiginsydney
                   Various bugfixes: Andy Helsby - github.com/Absoblogginlutely
 
@@ -26,7 +26,7 @@
   .\Connect-365.ps1
 #>
 $ErrorActionPreference = "Stop"
-$ScriptVersion = "1.3"
+$ScriptVersion = "1.3.1"
 $ScriptName = "Connect365"
 $ScriptDisplayName = "Connect-365"
 $ScriptURL = "https://github.com/cgoosen/Connect-365/releases/"
@@ -313,15 +313,9 @@ Function Get-ModuleInfo-SPO{
     }
 }
 
-# ExchangeMFAModule handling by Michel de Rooij - eightwone.com, @mderooij
 Function Get-ModuleInfo-EXO{
     try {
-        $ExchangeMFAModule = 'Microsoft.Exchange.Management.ExoPowershellModule'
-        $ModuleList = @(Get-ChildItem -Path "$($env:LOCALAPPDATA)\Apps\2.0" -Filter "$($ExchangeMFAModule).manifest" -Recurse ) | Sort-Object LastWriteTime -Desc | Select-Object -First 1
-        If ( $ModuleList) {
-          $ModuleName = Join-path -Path $ModuleList[0].Directory.FullName -ChildPath "$($ExchangeMFAModule).dll"
-        }
-        Import-Module -FullyQualifiedName $ModuleName -Force
+        Import-Module ExchangeOnlineManagement
         return $true
     }
     catch {
