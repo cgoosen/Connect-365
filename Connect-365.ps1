@@ -30,6 +30,8 @@ $ScriptVersion = "1.3.1"
 $ScriptName = "Connect365"
 $ScriptDisplayName = "Connect-365"
 $ScriptURL = "https://github.com/cgoosen/Connect-365/releases/"
+$ScriptAuthor = "cgoosen"
+$RegistryKeyPath = "HKCU:\Software\" + $ScriptAuthor + "\" + $ScriptName
 #region XAML code
 $XAML = @"
 <Window
@@ -171,6 +173,53 @@ $MainWindow=[Windows.Markup.XamlReader]::Load( $Reader )
 $XAMLGui.SelectNodes("//*[@Name]") | ForEach-Object {Set-Variable -Name "GUI$($_.Name)" -Value $MainWindow.FindName($_.Name)}
 
 # Functions
+
+Function WriteToRegistry{
+
+    try {
+        New-Item -Path "HKCU:\Software" -Name $ScriptAuthor
+        New-Item -Path ("HKCU:\Software\" + $ScriptAuthor) -Name $ScriptName
+
+        New-ItemProperty -Path $RegistryKeyPath -PropertyType "String" -Name "Username"
+        New-ItemProperty -Path $RegistryKeyPath -PropertyType "String" -Name "Service_EXO"    -Value "False"
+        New-ItemProperty -Path $RegistryKeyPath -PropertyType "String" -Name "Service_AAD"    -Value "False"
+        New-ItemProperty -Path $RegistryKeyPath -PropertyType "String" -Name "Service_Com"    -Value "False"
+        New-ItemProperty -Path $RegistryKeyPath -PropertyType "String" -Name "Service_SPO"    -Value "False"
+        New-ItemProperty -Path $RegistryKeyPath -PropertyType "String" -Name "Service_Teams"  -Value "False"
+        New-ItemProperty -Path $RegistryKeyPath -PropertyType "String" -Name "Service_Intune" -Value "False"
+    }
+    catch {
+    }
+
+    Set-ItemProperty -Path $RegistryKeyPath -Name "Username"       -Value $GUIField_User.Text
+    Set-ItemProperty -Path $RegistryKeyPath -Name "Service_EXO"    -Value $GUIBox_EXO.IsChecked
+    Set-ItemProperty -Path $RegistryKeyPath -Name "Service_AAD"    -Value $GUIBox_AAD.IsChecked
+    Set-ItemProperty -Path $RegistryKeyPath -Name "Service_Com"    -Value $GUIBox_Com.IsChecked
+    Set-ItemProperty -Path $RegistryKeyPath -Name "Service_SPO"    -Value $GUIBox_SPO.IsChecked
+    Set-ItemProperty -Path $RegistryKeyPath -Name "Service_MSO"    -Value $GUIBox_MSO.IsChecked
+    Set-ItemProperty -Path $RegistryKeyPath -Name "Service_Teams"  -Value $GUIBox_Teams.IsChecked
+    Set-ItemProperty -Path $RegistryKeyPath -Name "Service_Intune" -Value $GUIBox_Intune.IsChecked
+}
+
+Function ReadFromRegistry{
+
+    Write-Host "ReadFromRegistry"
+
+    try {
+        $GUIField_User.Text = Get-ItemPropertyValue -Path $RegistryKeyPath -Name "Username"
+
+        if ( (Get-ItemPropertyValue -Path $RegistryKeyPath -Name "Service_EXO")    -eq "True" ) { $GUIBox_EXO.IsChecked = 1 }
+        if ( (Get-ItemPropertyValue -Path $RegistryKeyPath -Name "Service_AAD")    -eq "True" ) { $GUIBox_AAD.IsChecked = 1 }
+        if ( (Get-ItemPropertyValue -Path $RegistryKeyPath -Name "Service_Com")    -eq "True" ) { $GUIBox_Com.IsChecked = 1 }
+        if ( (Get-ItemPropertyValue -Path $RegistryKeyPath -Name "Service_SPO")    -eq "True" ) { $GUIBox_SPO.IsChecked = 1 }
+        if ( (Get-ItemPropertyValue -Path $RegistryKeyPath -Name "Service_MSO")    -eq "True" ) { $GUIBox_MSO.IsChecked = 1 }
+        if ( (Get-ItemPropertyValue -Path $RegistryKeyPath -Name "Service_Teams")  -eq "True" ) { $GUIBox_Teams.IsChecked = 1 }
+        if ( (Get-ItemPropertyValue -Path $RegistryKeyPath -Name "Service_Intune") -eq "True" ) { $GUIBox_Intune.IsChecked = 1 }
+    }
+    catch {
+    }
+}
+
 Function Get-ScriptVersion{
     [CmdletBinding()]
   param(
@@ -465,6 +514,9 @@ function Get-OKBtn{
   	$EncryptPwd = $Passwd | ConvertTo-SecureString -AsPlainText -Force
   	$Script:Credential = New-Object System.Management.Automation.PSCredential($Username,$EncryptPwd)
   }
+
+  WriteToRegistry
+
   $Script:EndScript = 2
 	$MainWindow.Close()
 }
@@ -489,6 +541,10 @@ $MainWindow.add_KeyDown({
     if ($KeyPress.Key -eq "Escape"){
     Get-CancelBtn
     }
+})
+
+$MainWindow.add_Loaded({
+    ReadFromRegistry
 })
 
 $MainWindow.add_Closing({
