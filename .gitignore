@@ -1,0 +1,31 @@
+# Jekyll build
+/_site/
+.jekyll-metadata
+Gemfile.lock
+
+# Rust / Tauri build output
+target/
+src-tauri/target/
+src-tauri/gen/
+src-tauri/WixTools/
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Secrets — never commit
+.env
+.env.*
+*.p12
+*.pfx
+*.p8
+*.pem
+*.key
+spec/
+spec.md
+.claude/
+documentation.md

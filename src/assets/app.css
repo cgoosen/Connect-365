@@ -1,0 +1,350 @@
+/* Connect-365 — custom overrides on top of Pico CSS v2 (design spec §2–§7) */
+
+/* ── Connect-365 theme ─────────────────────────────────────────── */
+/* Palette lifted from the Connect-365 logos:
+   light  → green #1d8f5b on paper #e9f0ec, ink #070a09
+   dark   → green #34e08a on black #070a09, paper #f4faf6           */
+
+:root {
+  --gl-green:        #1d8f5b;
+  --gl-green-hover:  #187a4d;
+  --gl-paper:        #e9f0ec;
+  --gl-ink:          #070a09;
+}
+
+/* Light theme */
+[data-theme="light"],
+:root:not([data-theme="dark"]) {
+  --pico-primary:                    #1d8f5b;
+  --pico-primary-hover:              #187a4d;
+  --pico-primary-focus:              rgba(29, 143, 91, 0.25);
+  --pico-primary-inverse:            #ffffff;
+  --pico-primary-underline:          rgba(29, 143, 91, 0.5);
+  /* Pico v2 buttons key off these, not --pico-primary */
+  --pico-primary-background:         #1d8f5b;
+  --pico-primary-border:             #1d8f5b;
+  --pico-primary-hover-background:   #187a4d;
+  --pico-primary-hover-border:       #187a4d;
+
+  --pico-background-color:           #f4f7f5;
+  --pico-card-background-color:      #e9f0ec;
+  --pico-card-sectioning-background-color: #eef3f0;
+  --pico-secondary-background:       #dfe8e3;
+  --pico-code-background-color:      #e3ebe6;
+
+  --pico-color:                      #101613;
+  --pico-h1-color:                   #070a09;
+  --pico-h2-color:                   #10231a;
+  --pico-h3-color:                   #10231a;
+  --pico-muted-color:                #5c6b64;
+  --pico-muted-border-color:         #cdd8d2;
+
+  --pico-form-element-active-border-color: #1d8f5b;
+  --pico-form-element-focus-color:         rgba(29, 143, 91, 0.25);
+  --pico-switch-checked-background-color:  #1d8f5b;
+
+  /* Secondary buttons (Refresh, PSGallery, Update, Terminate All) — brand
+     green on hover instead of Pico's default blue-grey. */
+  --pico-secondary:                  #1d8f5b;
+  --pico-secondary-hover:            #187a4d;
+  --pico-secondary-focus:            rgba(29, 143, 91, 0.25);
+  --pico-secondary-inverse:          #ffffff;
+  --pico-secondary-hover-background: #187a4d;
+  --pico-secondary-hover-border:     #187a4d;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --pico-primary:                    #34e08a;
+  --pico-primary-hover:              #4ee89a;
+  --pico-primary-focus:              rgba(52, 224, 138, 0.3);
+  --pico-primary-inverse:            #05130b;
+  --pico-primary-underline:          rgba(52, 224, 138, 0.5);
+  /* Pico v2 buttons key off these, not --pico-primary */
+  --pico-primary-background:         #34e08a;
+  --pico-primary-border:             #34e08a;
+  --pico-primary-hover-background:   #4ee89a;
+  --pico-primary-hover-border:       #4ee89a;
+
+  --pico-background-color:           #070a09;
+  --pico-card-background-color:      #0d1210;
+  --pico-card-sectioning-background-color: #10160f;
+  --pico-secondary-background:       #17201b;
+  --pico-code-background-color:      #121a15;
+
+  --pico-color:                      #e7efe9;
+  --pico-h1-color:                   #f4faf6;
+  --pico-h2-color:                   #eaf5ee;
+  --pico-h3-color:                   #eaf5ee;
+  --pico-muted-color:                #8b9a91;
+  --pico-muted-border-color:         #223029;
+
+  --pico-form-element-active-border-color: #34e08a;
+  --pico-form-element-focus-color:         rgba(52, 224, 138, 0.3);
+  --pico-switch-checked-background-color:  #34e08a;
+
+  /* Secondary buttons (Refresh, PSGallery, Update, Terminate All) — brand
+     green on hover instead of Pico's default blue-grey. */
+  --pico-secondary:                  #34e08a;
+  --pico-secondary-hover:            #4ee89a;
+  --pico-secondary-focus:            rgba(52, 224, 138, 0.3);
+  --pico-secondary-inverse:          #05130b;
+  --pico-secondary-hover-background: #4ee89a;
+  --pico-secondary-hover-border:     #4ee89a;
+}
+
+/* ── Ensure [hidden] always hides (Pico / our own classes can set display) ── */
+[hidden] { display: none !important; }
+
+/* ── App shell ─────────────────────────────────────────────────── */
+.app-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem 1rem;
+  border-right: 1px solid var(--pico-muted-border-color);
+  background: var(--pico-card-background-color);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.app-sidebar > header {
+  margin: 0 0 1.5rem;
+  line-height: 1.2;
+  padding: 0 0.35rem;
+}
+.app-brand { display: block; width: 170px; max-width: 100%; height: auto; margin: 0 auto; }
+.app-brand.light { display: none; }
+[data-theme="dark"] .app-brand.dark  { display: block; }
+[data-theme="dark"] .app-brand.light { display: none; }
+:root:not([data-theme="dark"]) .app-brand.dark  { display: none; }
+:root:not([data-theme="dark"]) .app-brand.light { display: block; }
+
+/* Theme toggle */
+.theme-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+}
+.theme-toggle-row i { color: var(--pico-muted-color); font-size: 0.85rem; }
+.theme-toggle-row input[role="switch"] { margin: 0; }
+
+/* Vertical nav — override Pico's horizontal nav defaults */
+.app-sidebar nav {
+  display: block;
+  width: 100%;
+}
+.app-sidebar nav ul {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;   /* override Pico's nav ul { align-items: center } */
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.app-sidebar nav li { padding: 0; width: 100%; }
+
+.nav-link {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 0.9rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--pico-border-radius);
+  border-left: 3px solid transparent;
+  color: var(--pico-color);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.nav-link i {
+  width: 1.15rem;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--pico-muted-color);
+}
+.nav-link:hover { background: var(--pico-secondary-background); }
+.nav-link:hover i { color: var(--pico-color); }
+.nav-link.active {
+  background: color-mix(in srgb, var(--pico-primary) 14%, transparent);
+  border-left-color: var(--pico-primary);
+  color: var(--pico-primary);
+  font-weight: 600;
+}
+.nav-link.active i { color: var(--pico-primary); }
+
+.nav-divider {
+  height: 1px;
+  background: var(--pico-muted-border-color);
+  margin: 0.5rem 0.85rem;
+}
+
+/* Exit item gets a subtle danger hover */
+.nav-exit .nav-link:hover {
+  background: color-mix(in srgb, var(--pico-del-color, #e76f51) 12%, transparent);
+  color: var(--pico-del-color, #e76f51);
+}
+.nav-exit .nav-link:hover i { color: var(--pico-del-color, #e76f51); }
+
+/* Session count badge on the Sessions nav item */
+.nav-badge {
+  margin-left: auto;
+  padding: 0.1rem 0.5rem;
+  border-radius: 2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--pico-primary) 20%, transparent);
+  color: var(--pico-primary);
+}
+
+/* ── Main ──────────────────────────────────────────────────────── */
+.app-main { padding: 2rem 2.25rem; overflow-y: auto; overflow-x: hidden; max-height: 100vh; }
+.app-main hgroup { margin-bottom: 1.5rem; }
+.tab-panel[hidden] { display: none; }
+fieldset { margin-bottom: 1.25rem; }
+
+/* ── Service checkboxes ────────────────────────────────────────── */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.35rem 1rem;
+}
+.service-grid label { margin: 0; }
+
+/* ── Scope picker ──────────────────────────────────────────────── */
+.scope-profiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.scope-chip {
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  user-select: none;
+  transition: all 0.12s ease;
+}
+.scope-chip[aria-pressed="true"] {
+  background: var(--pico-primary);
+  border-color: var(--pico-primary);
+  color: var(--pico-primary-inverse);
+}
+.scope-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.15rem 1rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+}
+.scope-list label { margin: 0; font-size: 0.9rem; }
+.scope-desc { display: block; font-size: 0.75rem; color: var(--pico-muted-color); }
+#resolved-scopes { margin-top: 1rem; }
+#resolved-scope-list { display: block; white-space: normal; line-height: 1.9; }
+
+/* ── Connect action row ────────────────────────────────────────── */
+.connect-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.btn-connect { min-width: 160px; margin: 0; }
+.connect-status { color: var(--pico-muted-color); }
+.connect-status.error   { color: #b83b20; }
+[data-theme="dark"] .connect-status.error   { color: #f3a08a; }
+.connect-status.success { color: #1a7068; }
+[data-theme="dark"] .connect-status.success { color: #6fe0d0; }
+
+/* ── Prerequisites ─────────────────────────────────────────────── */
+#pwsh-status { margin-bottom: 1rem; }
+.prereq-toolbar { display: flex; justify-content: flex-end; margin-bottom: 0.75rem; }
+.prereq-toolbar button { margin: 0; }
+.status-pill {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.status-ok      { background: color-mix(in srgb, #2a9d8f 18%, transparent); color: #1a7068; }
+.status-warn    { background: color-mix(in srgb, #e9c46a 18%, transparent); color: #8a6d00; }
+.status-missing { background: color-mix(in srgb, #e76f51 18%, transparent); color: #b83b20; }
+[data-theme="dark"] .status-ok      { color: #6fe0d0; }
+[data-theme="dark"] .status-warn    { color: #f0d48a; }
+[data-theme="dark"] .status-missing { color: #f3a08a; }
+
+/* Contain the prereq table's own horizontal scroll instead of letting it
+   push .app-main (and the whole window) wider when it doesn't fit. */
+#tab-prerequisites figure {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  overflow-x: auto;
+}
+#prereq-table { table-layout: auto; width: 100%; }
+#prereq-table td, #prereq-table th { padding: 0.5rem 0.65rem; }
+/* Only the fixed-content columns (Status/Version/Action/Link) stay on one
+   line; the Module name column wraps instead of forcing the table wider
+   than the window — this bounds the table's max width regardless of how
+   narrow the window gets. */
+#prereq-table td:not(:first-child),
+#prereq-table th { white-space: nowrap; }
+#prereq-table td:first-child { white-space: normal; }
+
+.prereq-action-btn { margin: 0; padding: 0.2rem 0.7rem; font-size: 0.8rem; }
+
+/* ── Sessions ──────────────────────────────────────────────────── */
+.sessions-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 2rem;
+  color: var(--pico-muted-color);
+  text-align: center;
+}
+.sessions-empty i { font-size: 2.5rem; opacity: 0.35; }
+
+.session-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 0.6rem;
+}
+.session-card .session-meta { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.session-card .session-label {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-card .session-time { font-size: 0.8rem; color: var(--pico-muted-color); }
+.session-card button { margin: 0; flex-shrink: 0; }
+
+.about { margin-top: 1.5rem; }
+.about header h3 { margin: 0; }

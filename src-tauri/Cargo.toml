@@ -1,0 +1,33 @@
+[package]
+name = "connect-365"
+version = "2.0.0-Preview1"
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "connect_365_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], optional = true }
+
+[features]
+# scope-update gates the only outbound network code (§8 supply-chain discipline).
+# Release builds include it; omit to strip reqwest from local dev builds.
+default = ["scope-update"]
+scope-update = ["dep:reqwest"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

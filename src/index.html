@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Connect-365</title>
+
+  <!-- Font Awesome 6 Free (solid) — vendored locally, no CDN -->
+  <link rel="stylesheet" href="assets/fontawesome/css/fontawesome.min.css" />
+  <link rel="stylesheet" href="assets/fontawesome/css/solid.min.css" />
+
+  <link rel="stylesheet" href="assets/pico.min.css" />
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <header>
+        <img class="app-brand light" alt="connect-365" src="assets/logo-stacked-light.png" />
+        <img class="app-brand dark"  alt="connect-365" src="assets/logo-stacked-dark.png" />
+      </header>
+
+      <div class="theme-toggle-row">
+        <i class="fa-solid fa-sun"></i>
+        <input type="checkbox" role="switch" id="theme-switch" checked aria-label="Toggle dark mode" />
+        <i class="fa-solid fa-moon"></i>
+      </div>
+
+      <nav>
+        <ul>
+          <li><a href="#" class="nav-link active" data-tab="connect" aria-current="page">
+            <i class="fa-solid fa-plug"></i> Connect
+          </a></li>
+          <li><a href="#" class="nav-link" data-tab="prerequisites">
+            <i class="fa-solid fa-clipboard-list"></i> Prerequisites
+          </a></li>
+          <li><a href="#" class="nav-link" data-tab="sessions">
+            <i class="fa-solid fa-terminal"></i> Sessions
+            <span id="sessions-count-badge" class="nav-badge" hidden>0</span>
+          </a></li>
+          <li><a href="#" class="nav-link" data-tab="settings">
+            <i class="fa-solid fa-gear"></i> Settings
+          </a></li>
+          <li class="nav-divider" role="separator"></li>
+          <li class="nav-exit"><a href="#" class="nav-link" id="btn-exit">
+            <i class="fa-solid fa-right-from-bracket"></i> Exit
+          </a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="app-main">
+
+      <!-- ── Connect tab ──────────────────────────────────────────── -->
+      <section id="tab-connect" class="tab-panel active">
+        <hgroup>
+          <h2>Connect to Microsoft 365</h2>
+          <p>Pick your services, authenticate, and land in an active session.</p>
+        </hgroup>
+
+        <form id="connect-form">
+
+          <label for="upn">
+            Username:
+            <input type="email" id="upn" name="upn"
+                   placeholder="admin@contoso.onmicrosoft.com" autocomplete="username" />
+            <small>Attempts to pre-fill the sign-in prompt. Leave blank to choose an account at connect time.</small>
+          </label>
+
+          <fieldset id="service-list">
+            <legend>Services</legend>
+            <div id="service-checkboxes" class="service-grid">
+              <small aria-busy="true">Loading modules…</small>
+            </div>
+          </fieldset>
+
+          <div id="spo-url-row" hidden>
+            <label for="spo-url">
+              SharePoint Admin URL
+              <input type="url" id="spo-url" name="spo_url"
+                     placeholder="https://contoso-admin.sharepoint.com" />
+            </label>
+          </div>
+
+          <div id="pnp-url-row" hidden>
+            <label for="pnp-url">
+              PnP Site URL <small>(optional — leave blank for tenant admin)</small>
+              <input type="url" id="pnp-url" name="pnp_url"
+                     placeholder="https://contoso-admin.sharepoint.com" />
+            </label>
+          </div>
+
+          <fieldset id="graph-scope-picker" hidden>
+            <legend>Microsoft Graph Scopes</legend>
+            <details open>
+              <summary>Quick Profiles</summary>
+              <div id="scope-profiles" class="scope-profiles"></div>
+            </details>
+            <details>
+              <summary>Advanced (all permissions)</summary>
+              <label for="scope-search">
+                <input type="search" id="scope-search" placeholder="Filter permissions…" />
+              </label>
+              <div id="scope-advanced-list" class="scope-list"></div>
+            </details>
+            <div id="resolved-scopes" hidden>
+              <p><strong>Selected scopes:</strong></p>
+              <code id="resolved-scope-list"></code>
+            </div>
+          </fieldset>
+
+          <div class="connect-actions">
+            <button type="submit" id="btn-connect" class="btn-connect">Connect</button>
+            <span id="connect-status" class="connect-status" hidden></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- ── Prerequisites tab ────────────────────────────────────── -->
+      <section id="tab-prerequisites" class="tab-panel" hidden>
+        <hgroup>
+          <h2>Prerequisites</h2>
+          <p>What's installed, and what needs attention.</p>
+        </hgroup>
+
+        <article id="pwsh-status" aria-busy="true">
+          <header><strong>PowerShell 7+ (pwsh)</strong></header>
+          <p id="pwsh-message">Checking…</p>
+        </article>
+
+        <div class="prereq-toolbar">
+          <button id="btn-refresh-prereqs">Refresh</button>
+        </div>
+
+        <figure>
+          <table id="prereq-table">
+            <thead>
+              <tr>
+                <th scope="col">Module</th><th scope="col">Status</th>
+                <th scope="col">Version</th><th scope="col">Action</th><th scope="col">Link</th>
+              </tr>
+            </thead>
+            <tbody id="prereq-body"></tbody>
+          </table>
+        </figure>
+      </section>
+
+      <!-- ── Sessions tab ─────────────────────────────────────────── -->
+      <section id="tab-sessions" class="tab-panel" hidden>
+        <hgroup>
+          <h2>Sessions</h2>
+          <p>Active PowerShell sessions and their connected services.</p>
+        </hgroup>
+
+        <div id="sessions-toolbar" class="prereq-toolbar" hidden>
+          <button id="btn-terminate-all" class="secondary outline">Terminate All</button>
+        </div>
+
+        <div id="sessions-list">
+          <div class="sessions-empty">
+            <i class="fa-solid fa-terminal"></i>
+            <p>No active sessions.<br /><small>Connect to a service to start a session.</small></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Settings tab ─────────────────────────────────────────── -->
+      <section id="tab-settings" class="tab-panel" hidden>
+        <hgroup>
+          <h2>Settings</h2>
+          <p>Preferences are stored locally and applied on next launch.</p>
+        </hgroup>
+
+        <form id="settings-form">
+          <fieldset>
+            <legend>Behaviour</legend>
+            <label>
+              <input type="checkbox" role="switch" id="setting-tray" name="minimise_to_tray_on_connect" />
+              Minimise to system tray after Connect
+            </label>
+          </fieldset>
+          <fieldset>
+            <legend>Scope List</legend>
+            <label>
+              <input type="checkbox" role="switch" id="setting-autoupdate" name="auto_update_scopes" />
+              Automatically check for updated Graph scope list on launch
+            </label>
+            <small>Experimental - Fetches from the project GitHub repo</small>
+          </fieldset>
+          <button type="submit">Save</button>
+        </form>
+
+        <hr />
+
+        <article class="about">
+          <header><h3>About</h3></header>
+          <p>Connect-365<br>
+          Version: <span id="about-version"></span><br>
+          <a href="https://github.com/cgoosen/Connect-365">Project GitHub Repo</a></p>
+          <footer></footer>
+        </article>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
